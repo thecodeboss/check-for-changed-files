@@ -21,6 +21,7 @@ export function formatFailureMessage(
 
 export async function main(): Promise<void> {
   try {
+    core.info("Started");
     const payload = gh.pullRequestPayload();
     if (payload === undefined) {
       core.info(
@@ -31,12 +32,16 @@ export async function main(): Promise<void> {
       return;
     }
 
+    core.info("1");
+
     const skipLabel = core.getInput("skip-label");
     const prLabels = gh.pullRequestLabels(payload);
     if (matching.hasLabelMatch(prLabels, skipLabel)) {
       core.info(`the skip label ${repr(skipLabel)} is set`);
       return;
     }
+
+    core.info("2");
 
     const filePaths = await gh.changedFiles(payload);
     const prereqPattern =
@@ -50,6 +55,8 @@ export async function main(): Promise<void> {
       return;
     }
 
+    core.info("3");
+
     const filePattern = core.getInput("file-pattern", { required: true });
     if (matching.anyFileMatches(filePaths, filePattern)) {
       core.info(
@@ -59,6 +66,8 @@ export async function main(): Promise<void> {
       );
       return;
     }
+
+    core.info("4");
 
     const failureMessage = core.getInput("failure-message");
 
@@ -70,7 +79,10 @@ export async function main(): Promise<void> {
         skipLabel
       )
     );
+
+    core.info("5");
   } catch (error) {
-    core.setFailed(error.message);
+    core.info("6");
+    core.setFailed(JSON.stringify(error, undefined, 2));
   }
 }

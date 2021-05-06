@@ -40,7 +40,7 @@ export async function changedFiles(
   payload: EventPayloads.WebhookPayloadPullRequest
 ): Promise<string[]> {
   const MyOctokit = Octokit.plugin(paginateRest);
-  const octokit = new MyOctokit(); // Anonymous to avoid asking for an access token.
+  const octokit = new MyOctokit({ auth: process.env.GITHUB_TOKEN });
 
   return await octokit.paginate(
     "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",

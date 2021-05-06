@@ -7322,7 +7322,7 @@ function pullRequestLabels(payload) {
  */
 async function changedFiles(payload) {
     const MyOctokit = dist_node.Octokit.plugin(plugin_paginate_rest_dist_node.paginateRest);
-    const octokit = new MyOctokit(); // Anonymous to avoid asking for an access token.
+    const octokit = new MyOctokit({ auth: process.env.GITHUB_TOKEN });
     return await octokit.paginate("GET /repos/{owner}/{repo}/pulls/{pull_number}/files", {
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
@@ -7375,33 +7375,40 @@ function formatFailureMessage(template, prereqPattern, filePattern, skipLabel) {
 }
 async function main() {
     try {
+        core.info("Started");
         const payload = pullRequestPayload();
         if (payload === undefined) {
             core.info(`${repr(github.context.eventName)} is not a pull request event; skipping`);
             return;
         }
+        core.info("1");
         const skipLabel = core.getInput("skip-label");
         const prLabels = pullRequestLabels(payload);
         if (hasLabelMatch(prLabels, skipLabel)) {
             core.info(`the skip label ${repr(skipLabel)} is set`);
             return;
         }
+        core.info("2");
         const filePaths = await changedFiles(payload);
         const prereqPattern = core.getInput("prereq-pattern") || defaultPrereqPattern;
         if (!anyFileMatches(filePaths, prereqPattern)) {
             core.info(`the prerequisite ${repr(prereqPattern)} file pattern did not match any changed files of the pull request`);
             return;
         }
+        core.info("3");
         const filePattern = core.getInput("file-pattern", { required: true });
         if (anyFileMatches(filePaths, filePattern)) {
             core.info(`the ${repr(filePattern)} file pattern matched the changed files of the pull request`);
             return;
         }
+        core.info("4");
         const failureMessage = core.getInput("failure-message");
         core.setFailed(formatFailureMessage(failureMessage, prereqPattern, filePattern, skipLabel));
+        core.info("5");
     }
     catch (error) {
-        core.setFailed(error.message);
+        core.info("6");
+        core.setFailed(JSON.stringify(error, undefined, 2));
     }
 }
 
